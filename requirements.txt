@@ -1,0 +1,8 @@
+python-dotenv==1.0.1 
+langchain-openai==0.2.0 
+langchain-community==0.3.1
+Flask==3.0.3
+pygame==2.6.1 
+wavio==0.0.9
+sounddevice==0.5.1
+openai-whisper
