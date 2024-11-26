@@ -48,6 +48,10 @@ YELLOW = (255, 255, 0)
 RED = (255, 0, 0)
 LIGHT_BLUE = (100, 100, 255)
 
+bulb_image = pygame.image.load("imgs" + os.sep + "bulb.png") 
+window_image = pygame.image.load("imgs" + os.sep + "window.png")  
+bulb_image = pygame.transform.scale(bulb_image, (60, 60)) 
+window_image = pygame.transform.scale(window_image, (60, 80)) 
 
 # Definicja klasy Room
 class Room:
@@ -66,9 +70,11 @@ class Room:
     def draw_room(self):
         pygame.draw.rect(screen, self.color, (self.x, self.y, WIDTH // 2, HEIGHT // 2))
         if self.light_on:
-            pygame.draw.circle(screen, YELLOW, (int(self.x + ROOM_WIDTH * 3/4), int(self.y + ROOM_HEIGHT * 1/4)), 20)
+            screen.blit(bulb_image, (self.x + ROOM_WIDTH * 3/4 - 20, self.y + ROOM_HEIGHT * 1/4 - 20))
+
         if self.window_open:
-            pygame.draw.circle(screen, LIGHT_BLUE, (int(self.x + ROOM_WIDTH * 1/2), int(self.y + ROOM_HEIGHT * 1/2)), 20)
+            screen.blit(window_image, (self.x + ROOM_WIDTH * 1/2 - 30, self.y + ROOM_HEIGHT * 1/2 - 30))
+
 
         pygame.draw.rect(screen, WHITE, (self.x, self.y, 140, 40))
         font = pygame.font.Font(None, 36)
@@ -149,12 +155,6 @@ def get_rooms_description() -> str:
         ret_str += r.get_info()
     return ret_str
 
-
-# Utworzenie obiektu klasy Agent
-master_prompt = SystemMessage("Jesteś pomocnym systemem domu inteligentnego. Wykonuj polecenia użytkownika. Do wykonywania poleceń zastosuj dostępnych Ci narzędzi. Do zapalenia lub zgaszenia światła wykorzystaj narzędzie 'switch_light'. Do otwierania lub zamykania okien wykorzystaj narzędzie 'set_window_state'")
-tools = [switch_light, set_window_state]
-room_ai = Agent(tools=tools, master_prompt=master_prompt)
-
 # Ustawienia nagrywania
 samplerate = 44100
 recorded_data = []
@@ -166,6 +166,7 @@ def record_audio():
     sd.wait()
     wavio.write("output.wav", recorded_data, samplerate, sampwidth=2)
     logger.info("Recording ended")
+
 
 def transcribe_audio() -> str:
     logger.info("Transcryption started...")
@@ -185,7 +186,13 @@ def transcribe_audio() -> str:
     logger.info(res)
     return res
 
+
 def main():
+    # Utworzenie obiektu klasy Agent
+    master_prompt = SystemMessage("Jesteś pomocnym systemem domu inteligentnego. Wykonuj polecenia użytkownika. Do wykonywania poleceń zastosuj dostępnych Ci narzędzi. Do zapalenia lub zgaszenia światła wykorzystaj narzędzie 'switch_light'. Do otwierania lub zamykania okien wykorzystaj narzędzie 'set_window_state'")
+    tools = [switch_light, set_window_state]
+    room_ai = Agent(tools=tools, master_prompt=master_prompt)
+
     clock = pygame.time.Clock()
 
     while True:
@@ -199,8 +206,8 @@ def main():
                     res = transcribe_audio()
 
                     logger.info("Agent execution started...")
-                    # room_ai.execute_query(HumanMessage("Zapal światło we wszystkich pokojach i otwórz okno we wszystkich pokojach" + "wiedząc, że: " + get_rooms_description()))
-                    room_ai.execute_query(HumanMessage(res + "wiedząc, że: " + get_rooms_description()))
+                    # room_ai.execute_query(HumanMessage(res + "wiedząc, że: " + get_rooms_description()))
+                    room_ai.execute_query(HumanMessage("Zapal światło we wszystkich pokojach i otwórz okno we wszystkich pokojach" + "wiedząc, że: " + get_rooms_description()))
                     logger.info("Agent execution ended")
                 else:
                     pass

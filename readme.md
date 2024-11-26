@@ -29,3 +29,8 @@ source .venv/bin/activate # Linux
 ```bash
 pip install -r requirements.txt
 ```
+
+### API key settup
+```bash
+OPENAI_API_KEY=your_key
+```

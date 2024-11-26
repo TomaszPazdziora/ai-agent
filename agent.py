@@ -26,10 +26,9 @@ class Agent:
         self.master_prompt = master_prompt
         self.messages = []
 
-        api_key = os.getenv("API_KEY")
         self.llm = ChatOpenAI(
             model="gpt-4o-mini",
-            api_key=api_key,
+            temperature=0.0
         )
         self.llm = self.llm.bind_tools(self.tools)
 
