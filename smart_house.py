@@ -206,8 +206,7 @@ def main():
                     res = transcribe_audio()
 
                     logger.info("Agent execution started...")
-                    # room_ai.execute_query(HumanMessage(res + "wiedząc, że: " + get_rooms_description()))
-                    room_ai.execute_query(HumanMessage("Zapal światło we wszystkich pokojach i otwórz okno we wszystkich pokojach" + "wiedząc, że: " + get_rooms_description()))
+                    room_ai.execute_query(HumanMessage(res + "wiedząc, że: " + get_rooms_description()))
                     logger.info("Agent execution ended")
                 else:
                     pass
