@@ -31,29 +31,28 @@ use_api = True
 if use_api == True:
     client = OpenAI()
 
-# Inicjalizacja Pygame
 pygame.init()
 
-# Ustawienia okna
+# Window settings
 WIDTH, HEIGHT = 800, 600
 ROOM_WIDTH = WIDTH / 2
 ROOM_HEIGHT = HEIGHT / 2
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption('Smart House')
 
-# Kolory
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
 YELLOW = (255, 255, 0)
 RED = (255, 0, 0)
 LIGHT_BLUE = (100, 100, 255)
 
+# Image loading
 bulb_image = pygame.image.load("imgs" + os.sep + "bulb.png") 
 window_image = pygame.image.load("imgs" + os.sep + "window.png")  
 bulb_image = pygame.transform.scale(bulb_image, (60, 60)) 
 window_image = pygame.transform.scale(window_image, (60, 80)) 
 
-# Definicja klasy Room
+# Room class definition
 class Room:
     def __init__(self, name: str, description: str, color: tuple, x: int, y: int):
         self.name = name
@@ -82,36 +81,36 @@ class Room:
         screen.blit(text, (self.x, self.y))
 
 
-# Utworzenie obiektów klasy Room
-sypialnia = Room(name="sypialnia",
-                 description="lewy górny róg, niebieskie ściany",
+# Room objects declaration
+bedroom = Room(name="bedroom",
+                 description="top left corner, blue walls",
                  color=(200, 200, 255),
                  x=0,
                  y=0)
 
-lazienka = Room(name="łazienka",
-                description="prawy górny róg, czerwone ściany",
+bathroom = Room(name="bathroom",
+                description="top right corner, red walls",
                 color=(255, 200, 200),
                  x=WIDTH // 2,
                  y=0)
 
-salon = Room(name="salon",
+living_room = Room(name="living_room",
                 description="lewy dolny róg, zielone ściany",
                 color=(200, 255, 200),
                 x=0,
                 y=HEIGHT // 2)
 
-kuchnia = Room(name="kuchnia",
+kitchen = Room(name="kitchen",
                 description="prawy dolny róg, szare ściany",
                 color=(200, 200, 200),
                 x=WIDTH // 2,
                 y=HEIGHT // 2)
 
-# lista wszystkich pokoi
-rooms = [sypialnia, lazienka, salon, kuchnia]
+# all rooms list
+rooms = [bedroom, bathroom, living_room, kitchen]
 
 
-# Definicja narzędzi Agenta
+# Agent tools definition
 @tool
 def switch_light(room_name: str, light_on: bool) -> None:
     """Switches light in given room. Both args are required!
@@ -120,14 +119,14 @@ def switch_light(room_name: str, light_on: bool) -> None:
         room_name: name of the room where light will be switched
         light_on: boolean value, True for turning light on, False for turning light off
     """
-    if room_name == "sypialnia":
-        sypialnia.light_on = light_on
-    elif room_name == "łazienka":
-        lazienka.light_on = light_on
-    elif room_name == "salon":
-        salon.light_on = light_on
-    elif room_name == "kuchnia":
-        kuchnia.light_on = light_on
+    if room_name == "bedroom":
+        bedroom.light_on = light_on
+    elif room_name == "bathroom":
+        bathroom.light_on = light_on
+    elif room_name == "living_room":
+        living_room.light_on = light_on
+    elif room_name == "kitchen":
+        kitchen.light_on = light_on
 
 
 @tool
@@ -138,14 +137,14 @@ def set_window_state(room_name: str, window_state: bool) -> None:
         room_name: name of the room where window state will be changed
         light_on: boolean value, True for opening window, False for closing window
     """
-    if room_name == "sypialnia":
-        sypialnia.window_open = window_state
-    elif room_name == "łazienka":
-        lazienka.window_open = window_state
-    elif room_name == "salon":
-        salon.window_open = window_state
-    elif room_name == "kuchnia":
-        kuchnia.window_open = window_state
+    if room_name == "bedroom":
+        bedroom.window_open = window_state
+    elif room_name == "bathroom":
+        bathroom.window_open = window_state
+    elif room_name == "living_room":
+        living_room.window_open = window_state
+    elif room_name == "kitchen":
+        kitchen.window_open = window_state
 
 
 def get_rooms_description() -> str:
@@ -155,11 +154,11 @@ def get_rooms_description() -> str:
         ret_str += r.get_info()
     return ret_str
 
-# Ustawienia nagrywania
+# Recording settings
 samplerate = 44100
 recorded_data = []
 
-# Funkcja do nagrywania audio
+# Audio recording function
 def record_audio():
     logger.info("Recording started...")
     recorded_data = sd.rec(int(RECORDING_TIME * samplerate), samplerate=samplerate, channels=2)
@@ -170,13 +169,13 @@ def record_audio():
 
 def transcribe_audio() -> str:
     logger.info("Transcryption started...")
-    # use api transcryption or local model
+    # Using API transcription model
     if use_api == True:
         file= open(audio_file, "rb")
         transcription = client.audio.transcriptions.create(
             model="whisper-1",
             file=file,
-            language="pl"
+            language="eng"
         )
         res = "Transcryption result:" + transcription.text
     else:
@@ -188,9 +187,13 @@ def transcribe_audio() -> str:
 
 
 def main():
-    # Utworzenie obiektu klasy Agent
-    master_prompt = SystemMessage("Jesteś pomocnym systemem domu inteligentnego. Wykonuj polecenia użytkownika. Do wykonywania poleceń zastosuj dostępnych Ci narzędzi. Do zapalenia lub zgaszenia światła wykorzystaj narzędzie 'switch_light'. Do otwierania lub zamykania okien wykorzystaj narzędzie 'set_window_state'")
+    # Describe instructions for Agent
+    master_prompt = SystemMessage("You are a helpful smart home system. Execute user commands and use the available tools to carry them out. To turn the lights on or off, use the 'switch_light' tool. To open or close windows, use the 'set_window_state' tool.")
+
+    # Declare tools list
     tools = [switch_light, set_window_state]
+
+    # Agent object definition
     room_ai = Agent(tools=tools, master_prompt=master_prompt)
 
     clock = pygame.time.Clock()
@@ -206,15 +209,15 @@ def main():
                     res = transcribe_audio()
 
                     logger.info("Agent execution started...")
-                    room_ai.execute_query(HumanMessage(res + "wiedząc, że: " + get_rooms_description()))
+                    room_ai.execute_query(HumanMessage(res + "knowing that: " + get_rooms_description()))
                     logger.info("Agent execution ended")
                 else:
                     pass
         
-        # wyczyszczenie ekranu
+        # clear screen
         screen.fill(BLACK)
 
-        # na czarny ekran narysowywane są pokoje
+        # draw rooms
         for r in rooms:
             r.draw_room()
 
