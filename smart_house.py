@@ -1,3 +1,5 @@
+import warnings
+import whisper
 import pygame
 import os
 from openai import OpenAI
@@ -17,8 +19,6 @@ logger.setLevel(logging.DEBUG)
 setup_logger(logger)
 load_dotenv()
 
-import whisper
-import warnings
 
 warnings.filterwarnings("ignore", category=UserWarning)
 warnings.filterwarnings("ignore", category=FutureWarning)
@@ -47,12 +47,14 @@ RED = (255, 0, 0)
 LIGHT_BLUE = (100, 100, 255)
 
 # Image loading
-bulb_image = pygame.image.load("imgs" + os.sep + "bulb.png") 
-window_image = pygame.image.load("imgs" + os.sep + "window.png")  
-bulb_image = pygame.transform.scale(bulb_image, (60, 60)) 
-window_image = pygame.transform.scale(window_image, (60, 80)) 
+bulb_image = pygame.image.load("imgs" + os.sep + "bulb.png")
+window_image = pygame.image.load("imgs" + os.sep + "window.png")
+bulb_image = pygame.transform.scale(bulb_image, (60, 60))
+window_image = pygame.transform.scale(window_image, (60, 80))
 
 # Room class definition
+
+
 class Room:
     def __init__(self, name: str, description: str, color: tuple, x: int, y: int):
         self.name = name
@@ -65,15 +67,17 @@ class Room:
 
     def get_info(self):
         return f"# room name: {self.name}, room description: {self.description} #"
-    
+
     def draw_room(self):
-        pygame.draw.rect(screen, self.color, (self.x, self.y, WIDTH // 2, HEIGHT // 2))
+        pygame.draw.rect(screen, self.color,
+                         (self.x, self.y, WIDTH // 2, HEIGHT // 2))
         if self.light_on:
-            screen.blit(bulb_image, (self.x + ROOM_WIDTH * 3/4 - 20, self.y + ROOM_HEIGHT * 1/4 - 20))
+            screen.blit(bulb_image, (self.x + ROOM_WIDTH * 3 /
+                        4 - 20, self.y + ROOM_HEIGHT * 1/4 - 20))
 
         if self.window_open:
-            screen.blit(window_image, (self.x + ROOM_WIDTH * 1/2 - 30, self.y + ROOM_HEIGHT * 1/2 - 30))
-
+            screen.blit(window_image, (self.x + ROOM_WIDTH * 1 /
+                        2 - 30, self.y + ROOM_HEIGHT * 1/2 - 30))
 
         pygame.draw.rect(screen, WHITE, (self.x, self.y, 140, 40))
         font = pygame.font.Font(None, 36)
@@ -83,28 +87,28 @@ class Room:
 
 # Room objects declaration
 bedroom = Room(name="bedroom",
-                 description="top left corner, blue walls",
-                 color=(200, 200, 255),
-                 x=0,
-                 y=0)
+               description="top left corner, blue walls",
+               color=(200, 200, 255),
+               x=0,
+               y=0)
 
 bathroom = Room(name="bathroom",
                 description="top right corner, red walls",
                 color=(255, 200, 200),
-                 x=WIDTH // 2,
-                 y=0)
+                x=WIDTH // 2,
+                y=0)
 
 living_room = Room(name="living_room",
-                description="lewy dolny róg, zielone ściany",
-                color=(200, 255, 200),
-                x=0,
-                y=HEIGHT // 2)
+                   description="down left corner, green walls",
+                   color=(200, 255, 200),
+                   x=0,
+                   y=HEIGHT // 2)
 
 kitchen = Room(name="kitchen",
-                description="prawy dolny róg, szare ściany",
-                color=(200, 200, 200),
-                x=WIDTH // 2,
-                y=HEIGHT // 2)
+               description="down right corner, grey walls",
+               color=(200, 200, 200),
+               x=WIDTH // 2,
+               y=HEIGHT // 2)
 
 # all rooms list
 rooms = [bedroom, bathroom, living_room, kitchen]
@@ -154,14 +158,18 @@ def get_rooms_description() -> str:
         ret_str += r.get_info()
     return ret_str
 
+
 # Recording settings
 samplerate = 44100
 recorded_data = []
 
 # Audio recording function
+
+
 def record_audio():
     logger.info("Recording started...")
-    recorded_data = sd.rec(int(RECORDING_TIME * samplerate), samplerate=samplerate, channels=2)
+    recorded_data = sd.rec(int(RECORDING_TIME * samplerate),
+                           samplerate=samplerate, channels=2)
     sd.wait()
     wavio.write("output.wav", recorded_data, samplerate, sampwidth=2)
     logger.info("Recording ended")
@@ -171,15 +179,15 @@ def transcribe_audio() -> str:
     logger.info("Transcryption started...")
     # Using API transcription model
     if use_api == True:
-        file= open(audio_file, "rb")
+        file = open(audio_file, "rb")
         transcription = client.audio.transcriptions.create(
             model="whisper-1",
             file=file,
-            language="eng"
+            language="en"
         )
         res = "Transcryption result:" + transcription.text
     else:
-        result = model.transcribe(audio_file, language="pl")
+        result = model.transcribe(audio_file, language="en")
         res = "Transcryption result:" + result["text"]
     logger.info("Tanskryption ended")
     logger.info(res)
@@ -188,7 +196,8 @@ def transcribe_audio() -> str:
 
 def main():
     # Describe instructions for Agent
-    master_prompt = SystemMessage("You are a helpful smart home system. Execute user commands and use the available tools to carry them out. To turn the lights on or off, use the 'switch_light' tool. To open or close windows, use the 'set_window_state' tool.")
+    master_prompt = SystemMessage(
+        "You are a helpful smart home system. Execute user commands and use the available tools to carry them out. To turn the lights on or off, use the 'switch_light' tool. To open or close windows, use the 'set_window_state' tool.")
 
     # Declare tools list
     tools = [switch_light, set_window_state]
@@ -209,11 +218,12 @@ def main():
                     res = transcribe_audio()
 
                     logger.info("Agent execution started...")
-                    room_ai.execute_query(HumanMessage(res + "knowing that: " + get_rooms_description()))
+                    room_ai.execute_query(HumanMessage(
+                        res + "knowing that: " + get_rooms_description()))
                     logger.info("Agent execution ended")
                 else:
                     pass
-        
+
         # clear screen
         screen.fill(BLACK)
 
